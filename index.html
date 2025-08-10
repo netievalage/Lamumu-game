@@ -3,25 +3,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mooo Catcher – Lamumu Edition</title>
+  <title>Mooo Catcher – Lamumu Edition (Sandboxed)</title>
   <meta name="description" content="Catch the Lamumu cows, dodge the UFOs, and help me get on the whitelist!" />
-  <script>
-    // --- Guard against wallet extension injection noise (MetaMask/OKX/etc.) ---
-    try { window.__disableEthereumInjection = true; } catch(e){}
-    window.addEventListener('error', function (e) {
-      var msg  = (e && e.message)  || '';
-      var file = (e && e.filename) || '';
-      if (msg.includes('redefine property: ethereum') || (file && file.includes('inject.chrome'))) {
-        e.preventDefault && e.preventDefault();
-        e.stopImmediatePropagation && e.stopImmediatePropagation();
-        return false;
-      }
-    }, true);
-  </script>
   <style>
-    :root{
-      --bg:#0d0f14; --panel:#121622; --ink:#eaf2ff; --accent:#7cf4c6; --accent2:#7ccbff; --bad:#ff6b6b; --good:#c5ff6b;
-    }
+    html,body{height:100%; margin:0}
+    body{background:#0d0f14; color:#eaf2ff; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial}
+    .wrap{position:fixed; inset:0; display:grid; place-items:center}
+    iframe{width:100%; height:100%; border:0}
+    .note{position:fixed; left:50%; transform:translateX(-50%); top:6px; background:#ffffff10; border:1px solid #2a365c; padding:.35rem .6rem; border-radius:999px; font-size:12px; z-index:5}
+  </style>
+</head>
+<body>
+  <div class="note">Sandboxed mode to avoid wallet extension conflicts 🛡️</div>
+  <div class="wrap">
+    <iframe id="gameframe" sandbox="allow-scripts allow-popups"></iframe>
+  </div>
+
+<script>
+// Build the actual game page inside a sandboxed iframe via srcdoc to avoid extension injections
+const GAME_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mooo Catcher – Lamumu Edition</title>
+  <style>
+    :root{ --bg:#0d0f14; --panel:#121622; --ink:#eaf2ff; --accent:#7cf4c6; --accent2:#7ccbff; --bad:#ff6b6b; --good:#c5ff6b; }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{margin:0; background: radial-gradient(1200px 700px at 70% -20%, #25305744, transparent), radial-gradient(800px 600px at -20% 120%, #1f2a4744, transparent), var(--bg); color:var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial}
@@ -29,10 +36,7 @@
     .hud{position:fixed; inset:0; z-index:10;}
     .row{display:flex; gap:.75rem; align-items:center;}
     .chip{background: #ffffff10; border:1px solid #ffffff26; padding:.4rem .7rem; border-radius: 999px; font-weight:600; letter-spacing:.3px; backdrop-filter: blur(6px);}
-    .chip.bad{border-color:#ff6b6b55}
-    .chip.good{border-color:#6bff6b55}
     .topbar{position:fixed; left:0; right:0; top:0; padding: .75rem .9rem; display:flex; justify-content:space-between; align-items:center;}
-    .title{font-weight:800; letter-spacing:.5px; font-size: clamp(16px,2.5vw,20px)}
     .actions{display:flex; gap:.5rem;}
     .btn{background:linear-gradient(180deg, #1a2033, #121829); color:var(--ink); border:1px solid #2d3757; padding:.55rem .8rem; border-radius:12px; font-weight:700; cursor:pointer; transition:transform .08s ease, box-shadow .2s ease; box-shadow: 0 6px 16px #00000055}
     .btn:hover{transform:translateY(-1px)}
@@ -47,8 +51,6 @@
     p{opacity:.85; line-height:1.45}
     .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px}
     .pill{background:#ffffff10; border:1px dashed #4a567a; border-radius:14px; padding:10px 12px; font-size:14px}
-    .big{font-weight:800; font-size:20px}
-    .em{opacity:.9}
     .flash{position:fixed; inset:0; background: radial-gradient(200px 200px at 50% 70%, #7cf4c633, transparent); pointer-events:none; animation:flash .6s ease-out forwards}
     @keyframes flash{from{opacity:1} to{opacity:0}}
     .toast{position:fixed; left:50%; transform:translateX(-50%); top:50%; translate: 0 -20px; padding:.7rem 1rem; border:1px solid #2a365c; border-radius:14px; background:#0f1422ee; backdrop-filter: blur(6px); font-weight:700; letter-spacing:.4px}
@@ -64,7 +66,7 @@
     <div class="hud">
       <div class="topbar">
         <div class="row">
-          <div class="chip big">🐄 Score: <span id="score">0</span></div>
+          <div class="chip">🐄 Score: <span id="score">0</span></div>
           <div class="chip">🏆 High: <span id="hiscore">0</span></div>
           <div class="chip">🕹️ Lv <span id="lvl">1</span></div>
         </div>
@@ -94,12 +96,12 @@
           <button class="btn" id="howBtn">ℹ️ How to score</button>
           <button class="btn" id="tweetBtn2">🐦 Tweet my intent</button>
         </div>
-        <p style="margin-top:10px; font-size:13px; opacity:.8">Designed with ❤️ by <b>acsivrikaya</b> for Lamumu — X: <b>@adilcansivrika1</b></p>
+        <p style="margin-top:10px; font-size:13px; opacity:.8">Designed with ❤️ by <b>acsivrikaya</b> — X: <b>@adilcansivrika1</b></p>
       </div>
     </div>
   </div>
 
-  <div class="watermark">Mooo to the Moon • v1.1</div>
+  <div class="watermark">Mooo to the Moon • sandbox</div>
   <div id="toasts"></div>
   <div id="fx"></div>
 
@@ -113,17 +115,10 @@
 
   // --- Audio (guarded) ---
   let audioCtx=null; let muted=false;
-  function ensureAudio(){
-    try { if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } }
-    catch(e){ /* ignore audio init errors */ }
-  }
+  function ensureAudio(){ try { if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } } catch(e){} }
   function safeAudio(op){ try{ if(!muted){ ensureAudio(); if(audioCtx) op(audioCtx); } }catch(e){} }
-  function beep(freq=880, dur=0.08, type='triangle', gain=0.08){
-    safeAudio((ac)=>{ const t=ac.currentTime; const o=ac.createOscillator(); const g=ac.createGain(); o.type=type; o.frequency.value=freq; g.gain.value=gain; o.connect(g).connect(ac.destination); o.start(t); o.stop(t+dur); });
-  }
-  function moo(){
-    safeAudio((ac)=>{ const t=ac.currentTime; const o=ac.createOscillator(); const g=ac.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(90, t+0.25); o.frequency.exponentialRampToValueAtTime(110, t+0.5); g.gain.setValueAtTime(0.001, t); g.gain.exponentialRampToValueAtTime(0.08, t+0.05); g.gain.exponentialRampToValueAtTime(0.001, t+0.7); o.connect(g).connect(ac.destination); o.start(t); o.stop(t+0.75); });
-  }
+  function beep(freq=880, dur=0.08, type='triangle', gain=0.08){ safeAudio((ac)=>{ const t=ac.currentTime; const o=ac.createOscillator(); const g=ac.createGain(); o.type=type; o.frequency.value=freq; g.gain.value=gain; o.connect(g).connect(ac.destination); o.start(t); o.stop(t+dur); }); }
+  function moo(){ safeAudio((ac)=>{ const t=ac.currentTime; const o=ac.createOscillator(); const g=ac.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(90, t+0.25); o.frequency.exponentialRampToValueAtTime(110, t+0.5); g.gain.setValueAtTime(0.001, t); g.gain.exponentialRampToValueAtTime(0.08, t+0.05); g.gain.exponentialRampToValueAtTime(0.001, t+0.7); o.connect(g).connect(ac.destination); o.start(t); o.stop(t+0.75); }); }
 
   // --- Game State ---
   const state={running:false, paused:false, score:0, hiscore: +localStorage.getItem('mooo.hi')||0, level:1, combo:0, spawnInterval: 900, lastSpawn:0, speed: 2.2, items:[], player:{x: W/2, y:H-90, w:80, h:24, vx:0, speed:9, dash:0}};
@@ -174,18 +169,21 @@
   function togglePause(){ if(!state.running){ return;} state.paused=!state.paused; toast(state.paused?'Paused ⏸':'Resume ▶'); }
   function toggleMute(){ muted=!muted; toast(muted?'Muted 🔇':'Sound 🔊'); }
 
-  // Buttons (ensure they exist before wiring)
   if(pauseBtn) pauseBtn.onclick=togglePause;
   if(muteBtn) muteBtn.onclick=toggleMute;
   if(resetBtn) resetBtn.onclick=()=>{ state.running=false; startScreen.style.display='grid'; state.items=[]; state.score=0; scoreEl.textContent='0'; startScreen.querySelector('h1').textContent='Mooo Catcher – Lamumu Edition'; };
-  function tweet(score){ const text = encodeURIComponent(`I just scored ${score} in Mooo Catcher – Lamumu Edition! 🐄🚀
-Help @lamumudotxyz notice me for whitelist! #Lamumu #Common #WhitelistMe`); const url = location.href; const u = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`; window.open(u, '_blank'); }
+  function tweet(score){ const text = encodeURIComponent(`I just scored ${score} in Mooo Catcher – Lamumu Edition! 🐄🚀\nHelp @lamumudotxyz notice me for whitelist! #Lamumu #Common #WhitelistMe`); const url = location.href; const u = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`; window.open(u, '_blank'); }
   if(tweetBtn) tweetBtn.onclick=()=>tweet(state.score);
   if(tweetBtn2) tweetBtn2.onclick=()=>tweet(0);
 
-  // Init HUD
   hiscoreEl.textContent=state.hiscore;
 })();
+</script>
+</body>
+</html>`;
+
+const iframe = document.getElementById('gameframe');
+iframe.srcdoc = GAME_HTML;
 </script>
 </body>
 </html>
