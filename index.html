@@ -13,7 +13,7 @@
     html,body{height:100%}
     body{margin:0; background: radial-gradient(1200px 700px at 70% -20%, #25305744, transparent), radial-gradient(800px 600px at -20% 120%, #1f2a4744, transparent), var(--bg); color:var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial}
     .wrap{display:flex; min-height:100%;}
-    .hud{position:fixed; inset:0; pointer-events:none;}
+    .hud{position:fixed; inset:0; z-index:10; }
     .row{display:flex; gap:.75rem; align-items:center;}
     .chip{background: #ffffff10; border:1px solid #ffffff26; padding:.4rem .7rem; border-radius: 999px; font-weight:600; letter-spacing:.3px; backdrop-filter: blur(6px);}
     .chip.bad{border-color:#ff6b6b55}
@@ -28,8 +28,8 @@
     .btn.warn{background:linear-gradient(180deg, #e36b6b, #a84040); border-color:#ff6b6b88}
     .badge{pointer-events:none; position:fixed; left:50%; transform:translateX(-50%); top:54px; font-size:12px; opacity:.8}
     canvas{display:block; width:100vw; height:100vh}
-    .center{pointer-events:none; position:fixed; inset:0; display:grid; place-items:center}
-    .card{pointer-events:auto; width:min(580px,92vw); background:linear-gradient(180deg, #151a2aee, #0f1422ee); border:1px solid #2a365c; padding:22px; border-radius:18px; box-shadow:0 30px 80px #00000099}
+    .center{position:fixed; inset:0; display:grid; place-items:center; z-index:20; }
+    .card{width:min(580px,92vw); background:linear-gradient(180deg, #151a2aee, #0f1422ee); border:1px solid #2a365c; padding:22px; border-radius:18px; box-shadow:0 30px 80px #00000099}
     h1{margin:.2rem 0 0; font-size: clamp(22px, 4vw, 32px)}
     p{opacity:.85; line-height:1.45}
     .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px}
