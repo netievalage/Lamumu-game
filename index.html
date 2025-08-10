@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mooo Catcher – Lamumu Edition (Sandboxed)</title>
   <meta name="description" content="Catch the Lamumu cows, dodge the UFOs, and help me get on the whitelist!" />
+  <!-- Inline favicon to avoid 404s -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230d0f14'/%3E%3Ctext x='32' y='40' font-size='30' text-anchor='middle' fill='%23eaf2ff'%3E%F0%9F%90%84%3C/text%3E%3C/svg%3E"/>
   <style>
     html,body{height:100%; margin:0; background:#0d0f14; color:#eaf2ff; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial}
     .wrap{position:fixed; inset:0; display:grid; place-items:center}
@@ -20,7 +22,9 @@
 
 <script>
 (function () {
-  // === Inner game HTML as a template literal (safe for newlines). Note the '</'+'script>' trick to avoid HTML parser ending the script. ===
+  // Important: avoid writing the literal closing tag token inside this block; use <\/script> when needed in strings.
+
+  // Inner game HTML (template literal). The inner closing tag is escaped as <\/script> so outer parsing is safe.
   const GAME_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -107,51 +111,101 @@
 
   <script>
   (function(){
+    // Safe storage (may be blocked in sandbox)
+    var store={ get:function(k, def){ try{ var v=localStorage.getItem(k); return v==null?def:+v; }catch(e){ return def; } }, set:function(k,v){ try{ localStorage.setItem(k,v);}catch(e){} } };
+
     var $ = function(id){ return document.getElementById(id); };
     var canvas = document.getElementById('game');
     var ctx = canvas.getContext('2d');
     var W=innerWidth, H=innerHeight; var DPR = Math.min(window.devicePixelRatio||1, 2);
     function resize(){ W=innerWidth; H=innerHeight; canvas.width=W*DPR; canvas.height=H*DPR; canvas.style.width=W+'px'; canvas.style.height=H+'px'; ctx.setTransform(DPR,0,0,DPR,0,0);} resize(); addEventListener('resize', resize);
+
     var audioCtx=null; var muted=false;
     function ensureAudio(){ try { if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } } catch(e){} }
     function safeAudio(op){ try{ if(!muted){ ensureAudio(); if(audioCtx) op(audioCtx); } }catch(e){} }
     function beep(freq, dur, type, gain){ if(freq===void 0) freq=880; if(dur===void 0) dur=0.08; if(type===void 0) type='triangle'; if(gain===void 0) gain=0.08; safeAudio(function(ac){ var t=ac.currentTime; var o=ac.createOscillator(); var g=ac.createGain(); o.type=type; o.frequency.value=freq; g.gain.value=gain; o.connect(g).connect(ac.destination); o.start(t); o.stop(t+dur); }); }
     function moo(){ safeAudio(function(ac){ var t=ac.currentTime; var o=ac.createOscillator(); var g=ac.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(90, t+0.25); o.frequency.exponentialRampToValueAtTime(110, t+0.5); g.gain.setValueAtTime(0.001, t); g.gain.exponentialRampToValueAtTime(0.08, t+0.05); g.gain.exponentialRampToValueAtTime(0.001, t+0.7); o.connect(g).connect(ac.destination); o.start(t); o.stop(t+0.75); }); }
-    var state={running:false, paused:false, score:0, hiscore: +(localStorage.getItem('mooo.hi')||0), level:1, combo:0, spawnInterval: 900, lastSpawn:0, speed: 2.2, items:[], player:{x: W/2, y:H-90, w:80, h:24, vx:0, speed:9, dash:0}};
+
+    var state={running:false, paused:false, score:0, hiscore: store.get('mooo.hi', 0), level:1, combo:0, spawnInterval: 900, lastSpawn:0, speed: 2.2, items:[], player:{x: W/2, y:H-90, w:80, h:24, vx:0, speed:9, dash:0}};
     var scoreEl = document.getElementById('score'); var hiscoreEl = document.getElementById('hiscore'); var lvlEl = document.getElementById('lvl'); var startScreen = document.getElementById('startScreen'); var pauseBtn = document.getElementById('pauseBtn'); var muteBtn = document.getElementById('muteBtn'); var tweetBtn = document.getElementById('tweetBtn'); var tweetBtn2 = document.getElementById('tweetBtn2'); var resetBtn = document.getElementById('resetBtn'); var wlBanner = document.getElementById('wl');
+
     function toast(msg, ms){ if(ms===void 0) ms=1100; var t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, ms); }
     function flash(){ var f=document.createElement('div'); f.className='flash'; document.getElementById('fx').appendChild(f); setTimeout(function(){ f.remove(); }, 600); }
+
     function start(){ state.running=true; state.paused=false; state.score=0; state.combo=0; state.level=1; state.speed=2.3; state.spawnInterval=900; state.items=[]; state.player.x=W/2; state.player.dash=0; scoreEl.textContent='0'; lvlEl.textContent='1'; startScreen.style.display='none'; requestAnimationFrame(animate); toast('Catch 🐄 + COMMON ✨'); }
-    function gameOver(){ state.running=false; startScreen.style.display='grid'; startScreen.querySelector('h1').textContent='Game Over – Score: '+state.score; if(state.score>state.hiscore){ state.hiscore=state.score; localStorage.setItem('mooo.hi', state.hiscore); toast('New High Score! 🏆',1600); } hiscoreEl.textContent=state.hiscore; }
+    function gameOver(){ state.running=false; startScreen.style.display='grid'; startScreen.querySelector('h1').textContent='Game Over – Score: '+state.score; if(state.score>state.hiscore){ state.hiscore=state.score; store.set('mooo.hi', state.hiscore); toast('New High Score! 🏆',1600); } hiscoreEl.textContent=state.hiscore; }
+
     function spawn(){ var x = 40 + Math.random()*(W-80); var baseVy = state.speed + Math.random()*state.level*0.6; var r = Math.random(); var type='cow', v=10, vy=baseVy, w=36, h=36, label='🐄', col='#c5ff6b'; if(r<0.12){ type='common'; v=25; vy=baseVy*1.05; w=40; h=40; label='Ｃ'; col='#7cf4c6'; } else if(r<0.26){ type='ufo'; v=-10; vy=baseVy*1.1; w=40; h=30; label='🛸'; col='#ffbd6b'; } else if(r<0.38){ type='rotten'; v=-5; vy=baseVy*1.05; w=36; h=32; label='🌾'; col='#ff6b6b'; } state.items.push({id: (crypto.getRandomValues(new Uint32Array(1))[0]), type:type, x:x, y:-50, w:w, h:h, vy:vy, vx:(Math.random()-.5)*.6, value:v, life:8000, label:label, col:col}); }
+
     function drawPlayer(){ var p=state.player; var r = 10; ctx.save(); ctx.translate(p.x, p.y); ctx.beginPath(); if(ctx.roundRect){ ctx.roundRect(-p.w/2, -p.h/2, p.w, p.h, r); } else { ctx.rect(-p.w/2, -p.h/2, p.w, p.h); } ctx.fillStyle='#1f2a47'; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle='#7ccbff88'; ctx.stroke(); ctx.font='700 14px system-ui'; ctx.fillStyle='#eaf2ffcc'; ctx.textAlign='center'; ctx.fillText('Whitelist Me →', 0, -10); ctx.restore(); }
+
     function drawItem(it){ ctx.save(); ctx.translate(it.x, it.y); if(it.type==='common'){ ctx.shadowColor='#45ffb4'; ctx.shadowBlur=18; ctx.fillStyle=it.col; ctx.beginPath(); ctx.arc(0,0,22,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; ctx.fillStyle='#0d0f14'; ctx.beginPath(); ctx.arc(0,0,14,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#caffdd'; ctx.font='900 14px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('COMMON',0,0); } else { ctx.font='28px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(it.label,0,0); } ctx.restore(); }
+
     function collide(a,b){ return !(a.x+a.w/2 < b.x-b.w/2 || a.x-a.w/2 > b.x+b.w/2 || a.y+a.h/2 < b.y-b.h/2 || a.y-a.h/2 > b.y+b.h/2); }
+
     var lastT=0;
     function animate(ts){ if(!state.running){ return; } var dt = Math.min(32, ts-lastT||16); lastT=ts; if(!state.paused){ update(dt); render(); } requestAnimationFrame(animate); }
-    function update(dt){ var p=state.player; p.x += p.vx; if(p.dash>0){ p.x += Math.sign(p.vx||1)*8; p.dash-=dt; } p.x = Math.max(40, Math.min(W-40, p.x)); state.lastSpawn += dt; if(state.lastSpawn>state.spawnInterval){ state.lastSpawn=0; spawn(); } for(var i=state.items.length-1;i>=0;i--){ var it=state.items[i]; it.x += it.vx* (1 + state.level*0.05); it.y += it.vy; it.life -= dt; if(it.y>H+60 || it.life<=0){ state.items.splice(i,1); continue; } var pbox={x:p.x,y:p.y,w:p.w,h:p.h}; var ibox={x:it.x,y:it.y,w:it.w,h:it.h}; if(collide(pbox, ibox)){ state.items.splice(i,1); if(it.value>0){ state.combo = Math.min(state.combo+1, 10); var bonus = Math.floor(it.value * (1 + state.combo*0.05)); state.score += bonus; scoreEl.textContent=String(state.score); flash(); if(it.type==='common'){ wlBanner.classList.remove('show'); void wlBanner.offsetWidth; wlBanner.classList.add('show'); moo(); } else { beep(900+state.combo*30, 0.07); } } else { state.combo = 0; state.score = Math.max(0, state.score + it.value); scoreEl.textContent=String(state.score); beep(160, 0.1, 'sine', 0.06); } } } var newLevel = 1 + Math.floor(state.score/120); if(newLevel!==state.level){ state.level=newLevel; lvlEl.textContent=String(newLevel); state.speed = 2.3 + (newLevel-1)*0.4; state.spawnInterval = Math.max(420, 900 - (newLevel-1)*40); toast('Level '+newLevel+' 🚀'); } }
+
+    function update(dt){ var p=state.player; p.x += p.vx; if(p.dash>0){ p.x += Math.sign(p.vx||1)*8; p.dash-=dt; } p.x = Math.max(40, Math.min(W-40, p.x)); state.lastSpawn += dt; if(state.lastSpawn>state.spawnInterval){ state.lastSpawn=0; spawn(); }
+      for(var i=state.items.length-1;i>=0;i--){ var it=state.items[i]; it.x += it.vx* (1 + state.level*0.05); it.y += it.vy; it.life -= dt; if(it.y>H+60 || it.life<=0){ state.items.splice(i,1); continue; }
+        var pbox={x:p.x,y:p.y,w:p.w,h:p.h}; var ibox={x:it.x,y:it.y,w:it.w,h:it.h};
+        if(collide(pbox, ibox)){
+          state.items.splice(i,1);
+          if(it.value>0){
+            state.combo = Math.min(state.combo+1, 10);
+            var bonus = Math.floor(it.value * (1 + state.combo*0.05));
+            state.score += bonus; scoreEl.textContent=String(state.score);
+            flash();
+            if(it.type==='common'){ wlBanner.classList.remove('show'); void wlBanner.offsetWidth; wlBanner.classList.add('show'); moo(); }
+            else { beep(900+state.combo*30, 0.07); }
+          } else {
+            state.combo = 0; state.score = Math.max(0, state.score + it.value); scoreEl.textContent=String(state.score); beep(160, 0.1, 'sine', 0.06);
+          }
+        }
+      }
+      var newLevel = 1 + Math.floor(state.score/120);
+      if(newLevel!==state.level){ state.level=newLevel; lvlEl.textContent=String(newLevel); state.speed = 2.3 + (newLevel-1)*0.4; state.spawnInterval = Math.max(420, 900 - (newLevel-1)*40); toast('Level '+newLevel+' 🚀'); }
+    }
+
     function render(){ ctx.clearRect(0,0,W,H); ctx.save(); ctx.globalAlpha=.5; for(var i=0;i<40;i++){ var x=(i*97)%W; var y=(i*i*37)%H; ctx.fillStyle=i%7? '#2a365c66':'#7cf4c633'; ctx.fillRect(x,y,2,2);} ctx.restore(); ctx.strokeStyle='#22304f'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(40, H-60); ctx.lineTo(W-40, H-60); ctx.stroke(); state.items.forEach(drawItem); drawPlayer(); }
+
     var keys={};
     addEventListener('keydown', function(e){ keys[e.key]=true; if(e.key==='p'||e.key==='P'){togglePause();} if(e.key==='m'||e.key==='M'){toggleMute();} if(e.key===' ' ){ dash(); e.preventDefault(); }});
     addEventListener('keyup', function(e){ keys[e.key]=false; });
     function ctrlLoop(){ if(!state.running || state.paused) { requestAnimationFrame(ctrlLoop); return; } var p=state.player; p.vx=0; if(keys['ArrowLeft']||keys['a']||keys['A']) p.vx=-p.speed; if(keys['ArrowRight']||keys['d']||keys['D']) p.vx=p.speed; requestAnimationFrame(ctrlLoop);} ctrlLoop();
+
     addEventListener('mousemove', function(e){ if(!state.running) return; state.player.x = e.clientX; });
     addEventListener('touchmove', function(e){ if(!state.running) return; state.player.x = e.touches[0].clientX; }, {passive:true});
+
     function dash(){ if(!state.running||state.paused) return; state.player.dash=180; beep(520,0.08,'square',0.06); }
     function togglePause(){ if(!state.running){ return;} state.paused=!state.paused; toast(state.paused?'Paused ⏸':'Resume ▶'); }
     function toggleMute(){ muted=!muted; toast(muted?'Muted 🔇':'Sound 🔊'); }
+
     if(pauseBtn) pauseBtn.onclick=togglePause;
     if(muteBtn) muteBtn.onclick=toggleMute;
     if(resetBtn) resetBtn.onclick=function(){ state.running=false; startScreen.style.display='grid'; state.items=[]; state.score=0; scoreEl.textContent='0'; startScreen.querySelector('h1').textContent='Mooo Catcher – Lamumu Edition'; };
-    function tweet(score){ var text = encodeURIComponent('I just scored '+score+' in Mooo Catcher – Lamumu Edition! 🐄🚀
-Help @lamumudotxyz notice me for whitelist! #Lamumu #Common #WhitelistMe'); var url = location.href; var u = "https://twitter.com/intent/tweet?text="+text+"&url="+encodeURIComponent(url); window.open(u, "_blank"); }
+
+    function tweet(score){ var text = encodeURIComponent('I just scored '+score+' in Mooo Catcher – Lamumu Edition! 🐄🚀\nHelp @lamumudotxyz notice me for whitelist! #Lamumu #Common #WhitelistMe'); var url = location.href; var u = "https://twitter.com/intent/tweet?text="+text+"&url="+encodeURIComponent(url); window.open(u, "_blank"); }
     if(tweetBtn) tweetBtn.onclick=function(){ tweet(state.score); };
     if(tweetBtn2) tweetBtn2.onclick=function(){ tweet(0); };
+
     hiscoreEl.textContent=String(state.hiscore);
+
     var sBtn=document.getElementById('startBtn'); if(sBtn) sBtn.addEventListener('click', start);
     var hBtn=document.getElementById('howBtn'); if(hBtn) hBtn.addEventListener('click', function(){ toast('+10 🐄, +25 COMMON, -10 UFO, -5 hay'); });
+
+    // Signal parent that the inner page booted (used as a test)
+    try { window.parent && window.parent.postMessage({type:'LAMUMU_READY'}, '*'); } catch(_){}
+
+    // Minimal inner self-tests
+    (function selftest(){
+      function assert(cond, msg){ (cond?console.log:console.error)('[INNER TEST]', cond?'OK':'FAIL', msg); }
+      assert(!!document.getElementById('game'), '#game canvas exists');
+      assert(!!document.getElementById('startBtn'), '#startBtn exists');
+      assert(typeof requestAnimationFrame==='function', 'rAF available');
+    })();
   })();
-  </script>
+  <\/script>
 </body>
 </html>`;
 
@@ -174,8 +228,29 @@ Help @lamumudotxyz notice me for whitelist! #Lamumu #Common #WhitelistMe'); var 
     var url = URL.createObjectURL(blob);
     mount(url);
   }
+
+  // Parent-side tests and fallback logic
+  var usedSrcdoc = false;
+  var booted = false;
+  window.addEventListener('message', function(ev){
+    if(ev && ev.data && ev.data.type === 'LAMUMU_READY'){
+      booted = true;
+      console.log('[PARENT TEST] OK inner boot message');
+    }
+  });
+
   document.addEventListener('DOMContentLoaded', function () {
-    if (!trySrcdoc()) useBlob();
+    usedSrcdoc = trySrcdoc();
+    if (!usedSrcdoc) {
+      console.log('[PARENT TEST] srcdoc not supported, using Blob');
+      useBlob();
+    } else {
+      // If no READY within 1500ms (some extensions interfere), switch to Blob
+      setTimeout(function(){ if(!booted){ console.warn('[PARENT TEST] No READY from srcdoc, falling back to Blob'); useBlob(); } }, 1500);
+    }
+
+    // Basic parent self-tests
+    console.log('[PARENT TEST] iframe present:', !!document.getElementById('gameframe'));
   });
 })();
 </script>
