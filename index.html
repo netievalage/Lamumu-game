@@ -172,7 +172,8 @@ const GAME_HTML = `<!DOCTYPE html>
   if(pauseBtn) pauseBtn.onclick=togglePause;
   if(muteBtn) muteBtn.onclick=toggleMute;
   if(resetBtn) resetBtn.onclick=()=>{ state.running=false; startScreen.style.display='grid'; state.items=[]; state.score=0; scoreEl.textContent='0'; startScreen.querySelector('h1').textContent='Mooo Catcher – Lamumu Edition'; };
-  function tweet(score){ const text = encodeURIComponent(`I just scored ${score} in Mooo Catcher – Lamumu Edition! 🐄🚀\nHelp @lamumudotxyz notice me for whitelist! #Lamumu #Common #WhitelistMe`); const url = location.href; const u = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`; window.open(u, '_blank'); }
+  function tweet(score){ const text = encodeURIComponent(`I just scored ${score} in Mooo Catcher – Lamumu Edition! 🐄🚀
+Help @lamumudotxyz notice me for whitelist! #Lamumu #Common #WhitelistMe`); const url = location.href; const u = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(url)}`; window.open(u, '_blank'); }
   if(tweetBtn) tweetBtn.onclick=()=>tweet(state.score);
   if(tweetBtn2) tweetBtn2.onclick=()=>tweet(0);
 
@@ -182,8 +183,30 @@ const GAME_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const iframe = document.getElementById('gameframe');
-iframe.srcdoc = GAME_HTML;
+const iframe = (function () {
+  function mount(src) {
+    var iframe = document.getElementById('gameframe');
+    if (!iframe) return;
+    iframe.sandbox = 'allow-scripts allow-popups';
+    iframe.src = src; // blob or data url
+  }
+  function trySrcdoc() {
+    var iframe = document.getElementById('gameframe');
+    if (!iframe) return false;
+    if (!('srcdoc' in iframe)) return false;
+    iframe.sandbox = 'allow-scripts allow-popups';
+    iframe.srcdoc = GAME_HTML;
+    return true;
+  }
+  function useBlob() {
+    var blob = new Blob([GAME_HTML], { type: 'text/html' });
+    var url = URL.createObjectURL(blob);
+    mount(url);
+  }
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!trySrcdoc()) useBlob();
+  });
+})();
 </script>
 </body>
 </html>
