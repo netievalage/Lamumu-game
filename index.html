@@ -20,267 +20,140 @@
 
 <script>
 (function () {
-  // === Inner game HTML as a plain string (no backticks) ===
-  var GAME_HTML = '<!DOCTYPE html>
-'
-    + '<html lang="en">
-'
-    + '<head>
-'
-    + '  <meta charset="utf-8" />
-'
-    + '  <meta name="viewport" content="width=device-width, initial-scale=1" />
-'
-    + '  <title>Mooo Catcher – Lamumu Edition</title>
-'
-    + '  <style>
-'
-    + '    :root{ --bg:#0d0f14; --panel:#121622; --ink:#eaf2ff; --accent:#7cf4c6; --accent2:#7ccbff; --bad:#ff6b6b; --good:#c5ff6b; }
-'
-    + '    *{box-sizing:border-box}
-'
-    + '    html,body{height:100%}
-'
-    + '    body{margin:0; background: radial-gradient(1200px 700px at 70% -20%, #25305744, transparent), radial-gradient(800px 600px at -20% 120%, #1f2a4744, transparent), var(--bg); color:var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial}
-'
-    + '    .wrap{display:flex; min-height:100%;}
-'
-    + '    .hud{position:fixed; inset:0; z-index:10;}
-'
-    + '    .row{display:flex; gap:.75rem; align-items:center;}
-'
-    + '    .chip{background: #ffffff10; border:1px solid #ffffff26; padding:.4rem .7rem; border-radius: 999px; font-weight:600; letter-spacing:.3px; backdrop-filter: blur(6px);}
-'
-    + '    .topbar{position:fixed; left:0; right:0; top:0; padding: .75rem .9rem; display:flex; justify-content:space-between; align-items:center;}
-'
-    + '    .actions{display:flex; gap:.5rem;}
-'
-    + '    .btn{background:linear-gradient(180deg, #1a2033, #121829); color:var(--ink); border:1px solid #2d3757; padding:.55rem .8rem; border-radius:12px; font-weight:700; cursor:pointer; transition:transform .08s ease, box-shadow .2s ease; box-shadow: 0 6px 16px #00000055}
-'
-    + '    .btn:hover{transform:translateY(-1px)}
-'
-    + '    .btn:active{transform:translateY(1px)}
-'
-    + '    .btn.primary{background:linear-gradient(180deg, #2acdbe, #1c8b7d); border-color:#2ad0be88}
-'
-    + '    .btn.warn{background:linear-gradient(180deg, #e36b6b, #a84040); border-color:#ff6b6b88}
-'
-    + '    .badge{position:fixed; left:50%; transform:translateX(-50%); top:54px; font-size:12px; opacity:.8}
-'
-    + '    canvas{display:block; width:100vw; height:100vh}
-'
-    + '    .center{position:fixed; inset:0; display:grid; place-items:center; z-index:20;}
-'
-    + '    .card{width:min(580px,92vw); background:linear-gradient(180deg, #151a2aee, #0f1422ee); border:1px solid #2a365c; padding:22px; border-radius:18px; box-shadow:0 30px 80px #00000099}
-'
-    + '    h1{margin:.2rem 0 0; font-size: clamp(22px, 4vw, 32px)}
-'
-    + '    p{opacity:.85; line-height:1.45}
-'
-    + '    .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px}
-'
-    + '    .pill{background:#ffffff10; border:1px dashed #4a567a; border-radius:14px; padding:10px 12px; font-size:14px}
-'
-    + '    .flash{position:fixed; inset:0; background: radial-gradient(200px 200px at 50% 70%, #7cf4c633, transparent); pointer-events:none; animation:flash .6s ease-out forwards}
-'
-    + '    @keyframes flash{from{opacity:1} to{opacity:0}}
-'
-    + '    .toast{position:fixed; left:50%; transform:translateX(-50%); top:50%; translate: 0 -20px; padding:.7rem 1rem; border:1px solid #2a365c; border-radius:14px; background:#0f1422ee; backdrop-filter: blur(6px); font-weight:700; letter-spacing:.4px}
-'
-    + '    .watermark{position:fixed; right:10px; bottom:8px; font-size:11px; opacity:.6}
-'
-    + '    .wl{position:fixed; left:50%; top:44%; transform:translate(-50%,-50%) scale(.9); opacity:0; font-weight:900; letter-spacing:.8px; color:#caffdd; text-shadow:0 0 20px #45ffb4aa; font-size: clamp(24px, 8vw, 60px)}
-'
-    + '    .wl.show{animation: boom 1s ease-out forwards}
-'
-    + '    @keyframes boom{0%{opacity:0; transform:translate(-50%,-50%) scale(.6)} 40%{opacity:1; transform:translate(-50%,-50%) scale(1.12)} 100%{opacity:0; transform:translate(-50%,-50%) scale(1.0)}}
-'
-    + '  </style>
-'
-    + '</head>
-'
-    + '<body>
-'
-    + '  <div class="wrap">
-'
-    + '    <canvas id="game"></canvas>
-'
-    + '    <div class="hud">
-'
-    + '      <div class="topbar">
-'
-    + '        <div class="row">
-'
-    + '          <div class="chip">🐄 Score: <span id="score">0</span></div>
-'
-    + '          <div class="chip">🏆 High: <span id="hiscore">0</span></div>
-'
-    + '          <div class="chip">🕹️ Lv <span id="lvl">1</span></div>
-'
-    + '        </div>
-'
-    + '        <div class="actions">
-'
-    + '          <button class="btn" id="pauseBtn" title="Pause/Resume (P)">⏯ Pause</button>
-'
-    + '          <button class="btn" id="muteBtn" title="Mute (M)">🔊 Sound</button>
-'
-    + '          <button class="btn" id="tweetBtn" title="Share score">🐦 Tweet</button>
-'
-    + '          <button class="btn warn" id="resetBtn" title="Reset">↺ Reset</button>
-'
-    + '        </div>
-'
-    + '      </div>
-'
-    + '      <div class="badge chip">Help me get on the <b>Lamumu</b> whitelist 🐄🚀</div>
-'
-    + '      <div id="wl" class="wl">WHITELIST ME! ✨</div>
-'
-    + '    </div>
-'
-    + '    <div id="startScreen" class="center">
-'
-    + '      <div class="card">
-'
-    + '        <h1>Mooo Catcher – Lamumu Edition</h1>
-'
-    + '        <p class="em">Catch cows 🐄 and the <b>COMMON</b> token drops, dodge UFOs 🛸 and rotten hay 🌾. Build combo, level up, make noise. The devs will notice. 😉</p>
-'
-    + '        <div class="grid">
-'
-    + '          <div class="pill">🖱 <b>Mouse / Touch</b>: Move</div>
-'
-    + '          <div class="pill">⌨️ <b>← → / A D</b>: Move</div>
-'
-    + '          <div class="pill">⎵ <b>Space</b>: Dash</div>
-'
-    + '          <div class="pill">P: Pause • M: Mute</div>
-'
-    + '        </div>
-'
-    + '        <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap">
-'
-    + '          <button class="btn primary" id="startBtn">▶ Start</button>
-'
-    + '          <button class="btn" id="howBtn">ℹ️ How to score</button>
-'
-    + '          <button class="btn" id="tweetBtn2">🐦 Tweet my intent</button>
-'
-    + '        </div>
-'
-    + '        <p style="margin-top:10px; font-size:13px; opacity:.8">Designed with ❤️ by <b>acsivrikaya</b> — X: <b>@adilcansivrika1</b></p>
-'
-    + '      </div>
-'
-    + '    </div>
-'
-    + '  </div>
-'
-    + '  <div class="watermark">Mooo to the Moon • sandbox</div>
-'
-    + '  <div id="toasts"></div>
-'
-    + '  <div id="fx"></div>
-'
-    + '  <script>
-'
-    + '  (function(){
-'
-    + '    var $ = function(id){ return document.getElementById(id); };
-'
-    + '    var canvas = $(\'game\');
-'
-    + '    var ctx = canvas.getContext(\'2d\');
-'
-    + '    var W=innerWidth, H=innerHeight; var DPR = Math.min(window.devicePixelRatio||1, 2);
-'
-    + '    function resize(){ W=innerWidth; H=innerHeight; canvas.width=W*DPR; canvas.height=H*DPR; canvas.style.width=W+\'px\'; canvas.style.height=H+\'px\'; ctx.setTransform(DPR,0,0,DPR,0,0);} resize(); addEventListener(\'resize\', resize);
-'
-    + '    var audioCtx=null; var muted=false;
-'
-    + '    function ensureAudio(){ try { if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } } catch(e){} }
-'
-    + '    function safeAudio(op){ try{ if(!muted){ ensureAudio(); if(audioCtx) op(audioCtx); } }catch(e){} }
-'
-    + '    function beep(freq, dur, type, gain){ if(freq===void 0) freq=880; if(dur===void 0) dur=0.08; if(type===void 0) type=\'triangle\'; if(gain===void 0) gain=0.08; safeAudio(function(ac){ var t=ac.currentTime; var o=ac.createOscillator(); var g=ac.createGain(); o.type=type; o.frequency.value=freq; g.gain.value=gain; o.connect(g).connect(ac.destination); o.start(t); o.stop(t+dur); }); }
-'
-    + '    function moo(){ safeAudio(function(ac){ var t=ac.currentTime; var o=ac.createOscillator(); var g=ac.createGain(); o.type=\'sawtooth\'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(90, t+0.25); o.frequency.exponentialRampToValueAtTime(110, t+0.5); g.gain.setValueAtTime(0.001, t); g.gain.exponentialRampToValueAtTime(0.08, t+0.05); g.gain.exponentialRampToValueAtTime(0.001, t+0.7); o.connect(g).connect(ac.destination); o.start(t); o.stop(t+0.75); }); }
-'
-    + '    var state={running:false, paused:false, score:0, hiscore: +(localStorage.getItem(\'mooo.hi\')||0), level:1, combo:0, spawnInterval: 900, lastSpawn:0, speed: 2.2, items:[], player:{x: W/2, y:H-90, w:80, h:24, vx:0, speed:9, dash:0}};
-'
-    + '    var scoreEl = $(\'score\'); var hiscoreEl = $(\'hiscore\'); var lvlEl = $(\'lvl\'); var startScreen = $(\'startScreen\'); var pauseBtn = $(\'pauseBtn\'); var muteBtn = $(\'muteBtn\'); var tweetBtn = $(\'tweetBtn\'); var tweetBtn2 = $(\'tweetBtn2\'); var resetBtn = $(\'resetBtn\'); var wlBanner = $(\'wl\');
-'
-    + '    function toast(msg, ms){ if(ms===void 0) ms=1100; var t=document.createElement(\'div\'); t.className=\'toast\'; t.textContent=msg; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, ms); }
-'
-    + '    function flash(){ var f=document.createElement(\'div\'); f.className=\'flash\'; $(\'fx\').appendChild(f); setTimeout(function(){ f.remove(); }, 600); }
-'
-    + '    function start(){ state.running=true; state.paused=false; state.score=0; state.combo=0; state.level=1; state.speed=2.3; state.spawnInterval=900; state.items=[]; state.player.x=W/2; state.player.dash=0; scoreEl.textContent=\'0\'; lvlEl.textContent=\'1\'; startScreen.style.display=\'none\'; requestAnimationFrame(animate); toast(\'Catch 🐄 + COMMON ✨\'); }
-'
-    + '    function gameOver(){ state.running=false; startScreen.style.display=\'grid\'; startScreen.querySelector(\'h1\').textContent=\'Game Over – Score: \'+state.score; if(state.score>state.hiscore){ state.hiscore=state.score; localStorage.setItem(\'mooo.hi\', state.hiscore); toast(\'New High Score! 🏆\',1600); } hiscoreEl.textContent=state.hiscore; }
-'
-    + '    function spawn(){ var x = 40 + Math.random()*(W-80); var baseVy = state.speed + Math.random()*state.level*0.6; var r = Math.random(); var type=\'cow\', v=10, vy=baseVy, w=36, h=36, label=\'🐄\', col=\'#c5ff6b\'; if(r<0.12){ type=\'common\'; v=25; vy=baseVy*1.05; w=40; h=40; label=\'Ｃ\'; col=\'#7cf4c6\'; } else if(r<0.26){ type=\'ufo\'; v=-10; vy=baseVy*1.1; w=40; h=30; label=\'🛸\'; col=\'#ffbd6b\'; } else if(r<0.38){ type=\'rotten\'; v=-5; vy=baseVy*1.05; w=36; h=32; label=\'🌾\'; col=\'#ff6b6b\'; } state.items.push({id: (crypto.getRandomValues(new Uint32Array(1))[0]), type:type, x:x, y:-50, w:w, h:h, vy:vy, vx:(Math.random()-.5)*.6, value:v, life:8000, label:label, col:col}); }
-'
-    + '    function drawPlayer(){ var p=state.player; var r = 10; ctx.save(); ctx.translate(p.x, p.y); ctx.beginPath(); if(ctx.roundRect){ ctx.roundRect(-p.w/2, -p.h/2, p.w, p.h, r); } else { ctx.rect(-p.w/2, -p.h/2, p.w, p.h); } ctx.fillStyle=\'#1f2a47\'; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=\'#7ccbff88\'; ctx.stroke(); ctx.font=\'700 14px system-ui\'; ctx.fillStyle=\'#eaf2ffcc\'; ctx.textAlign=\'center\'; ctx.fillText(\'Whitelist Me →\', 0, -10); ctx.restore(); }
-'
-    + '    function drawItem(it){ ctx.save(); ctx.translate(it.x, it.y); if(it.type===\'common\'){ ctx.shadowColor=\'#45ffb4\'; ctx.shadowBlur=18; ctx.fillStyle=it.col; ctx.beginPath(); ctx.arc(0,0,22,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; ctx.fillStyle=\'#0d0f14\'; ctx.beginPath(); ctx.arc(0,0,14,0,Math.PI*2); ctx.fill(); ctx.fillStyle=\'#caffdd\'; ctx.font=\'900 14px system-ui\'; ctx.textAlign=\'center\'; ctx.textBaseline=\'middle\'; ctx.fillText(\'COMMON\',0,0); } else { ctx.font=\'28px serif\'; ctx.textAlign=\'center\'; ctx.textBaseline=\'middle\'; ctx.fillText(it.label,0,0); } ctx.restore(); }
-'
-    + '    function collide(a,b){ return !(a.x+a.w/2 < b.x-b.w/2 || a.x-a.w/2 > b.x+b.w/2 || a.y+a.h/2 < b.y-b.h/2 || a.y-a.h/2 > b.y+b.h/2); }
-'
-    + '    var lastT=0;
-'
-    + '    function animate(ts){ if(!state.running){ return; } var dt = Math.min(32, ts-lastT||16); lastT=ts; if(!state.paused){ update(dt); render(); } requestAnimationFrame(animate); }
-'
-    + '    function update(dt){ var p=state.player; p.x += p.vx; if(p.dash>0){ p.x += Math.sign(p.vx||1)*8; p.dash-=dt; } p.x = Math.max(40, Math.min(W-40, p.x)); state.lastSpawn += dt; if(state.lastSpawn>state.spawnInterval){ state.lastSpawn=0; spawn(); } for(var i=state.items.length-1;i>=0;i--){ var it=state.items[i]; it.x += it.vx* (1 + state.level*0.05); it.y += it.vy; it.life -= dt; if(it.y>H+60 || it.life<=0){ state.items.splice(i,1); continue; } var pbox={x:p.x,y:p.y,w:p.w,h:p.h}; var ibox={x:it.x,y:it.y,w:it.w,h:it.h}; if(collide(pbox, ibox)){ state.items.splice(i,1); if(it.value>0){ state.combo = Math.min(state.combo+1, 10); var bonus = Math.floor(it.value * (1 + state.combo*0.05)); state.score += bonus; scoreEl.textContent=String(state.score); flash(); if(it.type===\'common\'){ wlBanner.classList.remove(\'show\'); void wlBanner.offsetWidth; wlBanner.classList.add(\'show\'); moo(); } else { beep(900+state.combo*30, 0.07); } } else { state.combo = 0; state.score = Math.max(0, state.score + it.value); scoreEl.textContent=String(state.score); beep(160, 0.1, \'sine\', 0.06); } } } var newLevel = 1 + Math.floor(state.score/120); if(newLevel!==state.level){ state.level=newLevel; lvlEl.textContent=String(newLevel); state.speed = 2.3 + (newLevel-1)*0.4; state.spawnInterval = Math.max(420, 900 - (newLevel-1)*40); toast(\'Level \'+newLevel+\' 🚀\'); } }
-'
-    + '    function render(){ ctx.clearRect(0,0,W,H); ctx.save(); ctx.globalAlpha=.5; for(var i=0;i<40;i++){ var x=(i*97)%W; var y=(i*i*37)%H; ctx.fillStyle=i%7? \'#2a365c66\':\'#7cf4c633\'; ctx.fillRect(x,y,2,2);} ctx.restore(); ctx.strokeStyle=\'#22304f\'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(40, H-60); ctx.lineTo(W-40, H-60); ctx.stroke(); state.items.forEach(drawItem); drawPlayer(); }
-'
-    + '    var keys={};
-'
-    + '    addEventListener(\'keydown\', function(e){ keys[e.key]=true; if(e.key===\'p\'||e.key===\'P\'){togglePause();} if(e.key===\'m\'||e.key===\'M\'){toggleMute();} if(e.key===\' \' ){ dash(); e.preventDefault(); }});
-'
-    + '    addEventListener(\'keyup\', function(e){ keys[e.key]=false; });
-'
-    + '    function ctrlLoop(){ if(!state.running || state.paused) { requestAnimationFrame(ctrlLoop); return; } var p=state.player; p.vx=0; if(keys[\'ArrowLeft\']||keys[\'a\']||keys[\'A\']) p.vx=-p.speed; if(keys[\'ArrowRight\']||keys[\'d\']||keys[\'D\']) p.vx=p.speed; requestAnimationFrame(ctrlLoop);} ctrlLoop();
-'
-    + '    addEventListener(\'mousemove\', function(e){ if(!state.running) return; state.player.x = e.clientX; });
-'
-    + '    addEventListener(\'touchmove\', function(e){ if(!state.running) return; state.player.x = e.touches[0].clientX; }, {passive:true});
-'
-    + '    function dash(){ if(!state.running||state.paused) return; state.player.dash=180; beep(520,0.08,\'square\',0.06); }
-'
-    + '    function togglePause(){ if(!state.running){ return;} state.paused=!state.paused; toast(state.paused?\'Paused ⏸\':\'Resume ▶\'); }
-'
-    + '    function toggleMute(){ muted=!muted; toast(muted?\'Muted 🔇\':\'Sound 🔊\'); }
-'
-    + '    if(pauseBtn) pauseBtn.onclick=togglePause;
-'
-    + '    if(muteBtn) muteBtn.onclick=toggleMute;
-'
-    + '    if(resetBtn) resetBtn.onclick=function(){ state.running=false; startScreen.style.display=\'grid\'; state.items=[]; state.score=0; scoreEl.textContent=\'0\'; startScreen.querySelector(\'h1\').textContent=\'Mooo Catcher – Lamumu Edition\'; };
-'
-    + '    function tweet(score){ var text = encodeURIComponent(\'I just scored \'+score+\' in Mooo Catcher – Lamumu Edition! 🐄🚀\nHelp @lamumudotxyz notice me for whitelist! #Lamumu #Common #WhitelistMe\'); var url = location.href; var u = \"https://twitter.com/intent/tweet?text=\"+text+\"&url=\"+encodeURIComponent(url); window.open(u, \"_blank\"); }
-'
-    + '    if(tweetBtn) tweetBtn.onclick=function(){ tweet(state.score); };
-'
-    + '    if(tweetBtn2) tweetBtn2.onclick=function(){ tweet(0); };
-'
-    + '    hiscoreEl.textContent=String(state.hiscore);
-'
-    + '    // Wire start/how buttons
-'
-    + '    var sBtn=document.getElementById(\'startBtn\'); if(sBtn) sBtn.addEventListener(\'click\', start);
-'
-    + '    var hBtn=document.getElementById(\'howBtn\'); if(hBtn) hBtn.addEventListener(\'click\', function(){ toast(\'+10 🐄, +25 COMMON, -10 UFO, -5 hay\'); });
-'
-    + '  })();
-'
-    + '  </' + 'script>
-'
-    + '</body>
-'
-    + '</html>
-';
+  // === Inner game HTML as a template literal (safe for newlines). Note the '</'+'script>' trick to avoid HTML parser ending the script. ===
+  const GAME_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mooo Catcher – Lamumu Edition</title>
+  <style>
+    :root{ --bg:#0d0f14; --panel:#121622; --ink:#eaf2ff; --accent:#7cf4c6; --accent2:#7ccbff; --bad:#ff6b6b; --good:#c5ff6b; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; background: radial-gradient(1200px 700px at 70% -20%, #25305744, transparent), radial-gradient(800px 600px at -20% 120%, #1f2a4744, transparent), var(--bg); color:var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial}
+    .wrap{display:flex; min-height:100%;}
+    .hud{position:fixed; inset:0; z-index:10;}
+    .row{display:flex; gap:.75rem; align-items:center;}
+    .chip{background: #ffffff10; border:1px solid #ffffff26; padding:.4rem .7rem; border-radius: 999px; font-weight:600; letter-spacing:.3px; backdrop-filter: blur(6px);}
+    .topbar{position:fixed; left:0; right:0; top:0; padding: .75rem .9rem; display:flex; justify-content:space-between; align-items:center;}
+    .actions{display:flex; gap:.5rem;}
+    .btn{background:linear-gradient(180deg, #1a2033, #121829); color:var(--ink); border:1px solid #2d3757; padding:.55rem .8rem; border-radius:12px; font-weight:700; cursor:pointer; transition:transform .08s ease, box-shadow .2s ease; box-shadow: 0 6px 16px #00000055}
+    .btn:hover{transform:translateY(-1px)}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{background:linear-gradient(180deg, #2acdbe, #1c8b7d); border-color:#2ad0be88}
+    .btn.warn{background:linear-gradient(180deg, #e36b6b, #a84040); border-color:#ff6b6b88}
+    .badge{position:fixed; left:50%; transform:translateX(-50%); top:54px; font-size:12px; opacity:.8}
+    canvas{display:block; width:100vw; height:100vh}
+    .center{position:fixed; inset:0; display:grid; place-items:center; z-index:20;}
+    .card{width:min(580px,92vw); background:linear-gradient(180deg, #151a2aee, #0f1422ee); border:1px solid #2a365c; padding:22px; border-radius:18px; box-shadow:0 30px 80px #00000099}
+    h1{margin:.2rem 0 0; font-size: clamp(22px, 4vw, 32px)}
+    p{opacity:.85; line-height:1.45}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px}
+    .pill{background:#ffffff10; border:1px dashed #4a567a; border-radius:14px; padding:10px 12px; font-size:14px}
+    .flash{position:fixed; inset:0; background: radial-gradient(200px 200px at 50% 70%, #7cf4c633, transparent); pointer-events:none; animation:flash .6s ease-out forwards}
+    @keyframes flash{from{opacity:1} to{opacity:0}}
+    .toast{position:fixed; left:50%; transform:translateX(-50%); top:50%; translate: 0 -20px; padding:.7rem 1rem; border:1px solid #2a365c; border-radius:14px; background:#0f1422ee; backdrop-filter: blur(6px); font-weight:700; letter-spacing:.4px}
+    .watermark{position:fixed; right:10px; bottom:8px; font-size:11px; opacity:.6}
+    .wl{position:fixed; left:50%; top:44%; transform:translate(-50%,-50%) scale(.9); opacity:0; font-weight:900; letter-spacing:.8px; color:#caffdd; text-shadow:0 0 20px #45ffb4aa; font-size: clamp(24px, 8vw, 60px)}
+    .wl.show{animation: boom 1s ease-out forwards}
+    @keyframes boom{0%{opacity:0; transform:translate(-50%,-50%) scale(.6)} 40%{opacity:1; transform:translate(-50%,-50%) scale(1.12)} 100%{opacity:0; transform:translate(-50%,-50%) scale(1.0)}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <canvas id="game"></canvas>
+    <div class="hud">
+      <div class="topbar">
+        <div class="row">
+          <div class="chip">🐄 Score: <span id="score">0</span></div>
+          <div class="chip">🏆 High: <span id="hiscore">0</span></div>
+          <div class="chip">🕹️ Lv <span id="lvl">1</span></div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="pauseBtn" title="Pause/Resume (P)">⏯ Pause</button>
+          <button class="btn" id="muteBtn" title="Mute (M)">🔊 Sound</button>
+          <button class="btn" id="tweetBtn" title="Share score">🐦 Tweet</button>
+          <button class="btn warn" id="resetBtn" title="Reset">↺ Reset</button>
+        </div>
+      </div>
+      <div class="badge chip">Help me get on the <b>Lamumu</b> whitelist 🐄🚀</div>
+      <div id="wl" class="wl">WHITELIST ME! ✨</div>
+    </div>
+
+    <div id="startScreen" class="center">
+      <div class="card">
+        <h1>Mooo Catcher – Lamumu Edition</h1>
+        <p class="em">Catch cows 🐄 and the <b>COMMON</b> token drops, dodge UFOs 🛸 and rotten hay 🌾. Build combo, level up, make noise. The devs will notice. 😉</p>
+        <div class="grid">
+          <div class="pill">🖱 <b>Mouse / Touch</b>: Move</div>
+          <div class="pill">⌨️ <b>← → / A D</b>: Move</div>
+          <div class="pill">⎵ <b>Space</b>: Dash</div>
+          <div class="pill">P: Pause • M: Mute</div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap">
+          <button class="btn primary" id="startBtn">▶ Start</button>
+          <button class="btn" id="howBtn">ℹ️ How to score</button>
+          <button class="btn" id="tweetBtn2">🐦 Tweet my intent</button>
+        </div>
+        <p style="margin-top:10px; font-size:13px; opacity:.8">Designed with ❤️ by <b>acsivrikaya</b> — X: <b>@adilcansivrika1</b></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="watermark">Mooo to the Moon • sandbox</div>
+  <div id="toasts"></div>
+  <div id="fx"></div>
+
+  <script>
+  (function(){
+    var $ = function(id){ return document.getElementById(id); };
+    var canvas = document.getElementById('game');
+    var ctx = canvas.getContext('2d');
+    var W=innerWidth, H=innerHeight; var DPR = Math.min(window.devicePixelRatio||1, 2);
+    function resize(){ W=innerWidth; H=innerHeight; canvas.width=W*DPR; canvas.height=H*DPR; canvas.style.width=W+'px'; canvas.style.height=H+'px'; ctx.setTransform(DPR,0,0,DPR,0,0);} resize(); addEventListener('resize', resize);
+    var audioCtx=null; var muted=false;
+    function ensureAudio(){ try { if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } } catch(e){} }
+    function safeAudio(op){ try{ if(!muted){ ensureAudio(); if(audioCtx) op(audioCtx); } }catch(e){} }
+    function beep(freq, dur, type, gain){ if(freq===void 0) freq=880; if(dur===void 0) dur=0.08; if(type===void 0) type='triangle'; if(gain===void 0) gain=0.08; safeAudio(function(ac){ var t=ac.currentTime; var o=ac.createOscillator(); var g=ac.createGain(); o.type=type; o.frequency.value=freq; g.gain.value=gain; o.connect(g).connect(ac.destination); o.start(t); o.stop(t+dur); }); }
+    function moo(){ safeAudio(function(ac){ var t=ac.currentTime; var o=ac.createOscillator(); var g=ac.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(90, t+0.25); o.frequency.exponentialRampToValueAtTime(110, t+0.5); g.gain.setValueAtTime(0.001, t); g.gain.exponentialRampToValueAtTime(0.08, t+0.05); g.gain.exponentialRampToValueAtTime(0.001, t+0.7); o.connect(g).connect(ac.destination); o.start(t); o.stop(t+0.75); }); }
+    var state={running:false, paused:false, score:0, hiscore: +(localStorage.getItem('mooo.hi')||0), level:1, combo:0, spawnInterval: 900, lastSpawn:0, speed: 2.2, items:[], player:{x: W/2, y:H-90, w:80, h:24, vx:0, speed:9, dash:0}};
+    var scoreEl = document.getElementById('score'); var hiscoreEl = document.getElementById('hiscore'); var lvlEl = document.getElementById('lvl'); var startScreen = document.getElementById('startScreen'); var pauseBtn = document.getElementById('pauseBtn'); var muteBtn = document.getElementById('muteBtn'); var tweetBtn = document.getElementById('tweetBtn'); var tweetBtn2 = document.getElementById('tweetBtn2'); var resetBtn = document.getElementById('resetBtn'); var wlBanner = document.getElementById('wl');
+    function toast(msg, ms){ if(ms===void 0) ms=1100; var t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, ms); }
+    function flash(){ var f=document.createElement('div'); f.className='flash'; document.getElementById('fx').appendChild(f); setTimeout(function(){ f.remove(); }, 600); }
+    function start(){ state.running=true; state.paused=false; state.score=0; state.combo=0; state.level=1; state.speed=2.3; state.spawnInterval=900; state.items=[]; state.player.x=W/2; state.player.dash=0; scoreEl.textContent='0'; lvlEl.textContent='1'; startScreen.style.display='none'; requestAnimationFrame(animate); toast('Catch 🐄 + COMMON ✨'); }
+    function gameOver(){ state.running=false; startScreen.style.display='grid'; startScreen.querySelector('h1').textContent='Game Over – Score: '+state.score; if(state.score>state.hiscore){ state.hiscore=state.score; localStorage.setItem('mooo.hi', state.hiscore); toast('New High Score! 🏆',1600); } hiscoreEl.textContent=state.hiscore; }
+    function spawn(){ var x = 40 + Math.random()*(W-80); var baseVy = state.speed + Math.random()*state.level*0.6; var r = Math.random(); var type='cow', v=10, vy=baseVy, w=36, h=36, label='🐄', col='#c5ff6b'; if(r<0.12){ type='common'; v=25; vy=baseVy*1.05; w=40; h=40; label='Ｃ'; col='#7cf4c6'; } else if(r<0.26){ type='ufo'; v=-10; vy=baseVy*1.1; w=40; h=30; label='🛸'; col='#ffbd6b'; } else if(r<0.38){ type='rotten'; v=-5; vy=baseVy*1.05; w=36; h=32; label='🌾'; col='#ff6b6b'; } state.items.push({id: (crypto.getRandomValues(new Uint32Array(1))[0]), type:type, x:x, y:-50, w:w, h:h, vy:vy, vx:(Math.random()-.5)*.6, value:v, life:8000, label:label, col:col}); }
+    function drawPlayer(){ var p=state.player; var r = 10; ctx.save(); ctx.translate(p.x, p.y); ctx.beginPath(); if(ctx.roundRect){ ctx.roundRect(-p.w/2, -p.h/2, p.w, p.h, r); } else { ctx.rect(-p.w/2, -p.h/2, p.w, p.h); } ctx.fillStyle='#1f2a47'; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle='#7ccbff88'; ctx.stroke(); ctx.font='700 14px system-ui'; ctx.fillStyle='#eaf2ffcc'; ctx.textAlign='center'; ctx.fillText('Whitelist Me →', 0, -10); ctx.restore(); }
+    function drawItem(it){ ctx.save(); ctx.translate(it.x, it.y); if(it.type==='common'){ ctx.shadowColor='#45ffb4'; ctx.shadowBlur=18; ctx.fillStyle=it.col; ctx.beginPath(); ctx.arc(0,0,22,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; ctx.fillStyle='#0d0f14'; ctx.beginPath(); ctx.arc(0,0,14,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#caffdd'; ctx.font='900 14px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('COMMON',0,0); } else { ctx.font='28px serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(it.label,0,0); } ctx.restore(); }
+    function collide(a,b){ return !(a.x+a.w/2 < b.x-b.w/2 || a.x-a.w/2 > b.x+b.w/2 || a.y+a.h/2 < b.y-b.h/2 || a.y-a.h/2 > b.y+b.h/2); }
+    var lastT=0;
+    function animate(ts){ if(!state.running){ return; } var dt = Math.min(32, ts-lastT||16); lastT=ts; if(!state.paused){ update(dt); render(); } requestAnimationFrame(animate); }
+    function update(dt){ var p=state.player; p.x += p.vx; if(p.dash>0){ p.x += Math.sign(p.vx||1)*8; p.dash-=dt; } p.x = Math.max(40, Math.min(W-40, p.x)); state.lastSpawn += dt; if(state.lastSpawn>state.spawnInterval){ state.lastSpawn=0; spawn(); } for(var i=state.items.length-1;i>=0;i--){ var it=state.items[i]; it.x += it.vx* (1 + state.level*0.05); it.y += it.vy; it.life -= dt; if(it.y>H+60 || it.life<=0){ state.items.splice(i,1); continue; } var pbox={x:p.x,y:p.y,w:p.w,h:p.h}; var ibox={x:it.x,y:it.y,w:it.w,h:it.h}; if(collide(pbox, ibox)){ state.items.splice(i,1); if(it.value>0){ state.combo = Math.min(state.combo+1, 10); var bonus = Math.floor(it.value * (1 + state.combo*0.05)); state.score += bonus; scoreEl.textContent=String(state.score); flash(); if(it.type==='common'){ wlBanner.classList.remove('show'); void wlBanner.offsetWidth; wlBanner.classList.add('show'); moo(); } else { beep(900+state.combo*30, 0.07); } } else { state.combo = 0; state.score = Math.max(0, state.score + it.value); scoreEl.textContent=String(state.score); beep(160, 0.1, 'sine', 0.06); } } } var newLevel = 1 + Math.floor(state.score/120); if(newLevel!==state.level){ state.level=newLevel; lvlEl.textContent=String(newLevel); state.speed = 2.3 + (newLevel-1)*0.4; state.spawnInterval = Math.max(420, 900 - (newLevel-1)*40); toast('Level '+newLevel+' 🚀'); } }
+    function render(){ ctx.clearRect(0,0,W,H); ctx.save(); ctx.globalAlpha=.5; for(var i=0;i<40;i++){ var x=(i*97)%W; var y=(i*i*37)%H; ctx.fillStyle=i%7? '#2a365c66':'#7cf4c633'; ctx.fillRect(x,y,2,2);} ctx.restore(); ctx.strokeStyle='#22304f'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(40, H-60); ctx.lineTo(W-40, H-60); ctx.stroke(); state.items.forEach(drawItem); drawPlayer(); }
+    var keys={};
+    addEventListener('keydown', function(e){ keys[e.key]=true; if(e.key==='p'||e.key==='P'){togglePause();} if(e.key==='m'||e.key==='M'){toggleMute();} if(e.key===' ' ){ dash(); e.preventDefault(); }});
+    addEventListener('keyup', function(e){ keys[e.key]=false; });
+    function ctrlLoop(){ if(!state.running || state.paused) { requestAnimationFrame(ctrlLoop); return; } var p=state.player; p.vx=0; if(keys['ArrowLeft']||keys['a']||keys['A']) p.vx=-p.speed; if(keys['ArrowRight']||keys['d']||keys['D']) p.vx=p.speed; requestAnimationFrame(ctrlLoop);} ctrlLoop();
+    addEventListener('mousemove', function(e){ if(!state.running) return; state.player.x = e.clientX; });
+    addEventListener('touchmove', function(e){ if(!state.running) return; state.player.x = e.touches[0].clientX; }, {passive:true});
+    function dash(){ if(!state.running||state.paused) return; state.player.dash=180; beep(520,0.08,'square',0.06); }
+    function togglePause(){ if(!state.running){ return;} state.paused=!state.paused; toast(state.paused?'Paused ⏸':'Resume ▶'); }
+    function toggleMute(){ muted=!muted; toast(muted?'Muted 🔇':'Sound 🔊'); }
+    if(pauseBtn) pauseBtn.onclick=togglePause;
+    if(muteBtn) muteBtn.onclick=toggleMute;
+    if(resetBtn) resetBtn.onclick=function(){ state.running=false; startScreen.style.display='grid'; state.items=[]; state.score=0; scoreEl.textContent='0'; startScreen.querySelector('h1').textContent='Mooo Catcher – Lamumu Edition'; };
+    function tweet(score){ var text = encodeURIComponent('I just scored '+score+' in Mooo Catcher – Lamumu Edition! 🐄🚀
+Help @lamumudotxyz notice me for whitelist! #Lamumu #Common #WhitelistMe'); var url = location.href; var u = "https://twitter.com/intent/tweet?text="+text+"&url="+encodeURIComponent(url); window.open(u, "_blank"); }
+    if(tweetBtn) tweetBtn.onclick=function(){ tweet(state.score); };
+    if(tweetBtn2) tweetBtn2.onclick=function(){ tweet(0); };
+    hiscoreEl.textContent=String(state.hiscore);
+    var sBtn=document.getElementById('startBtn'); if(sBtn) sBtn.addEventListener('click', start);
+    var hBtn=document.getElementById('howBtn'); if(hBtn) hBtn.addEventListener('click', function(){ toast('+10 🐄, +25 COMMON, -10 UFO, -5 hay'); });
+  })();
+  </script>
+</body>
+</html>`;
 
   function mount(src) {
     var iframe = document.getElementById('gameframe');
