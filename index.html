@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+// Bazı cüzdanlar bu bayrağı dikkate alıyor
+window.__disableEthereumInjection = true;
+
+// Cüzdan enjeksiyon hatalarını bastır
+window.addEventListener('error', function (e) {
+  var msg  = (e && e.message)  || '';
+  var file = (e && e.filename) || '';
+  if (msg.includes('redefine property: ethereum') || file.includes('inject.chrome')) {
+    e.preventDefault && e.preventDefault();
+    e.stopImmediatePropagation && e.stopImmediatePropagation();
+    return false;
+  }
+}, true);
+</script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mooo Catcher – Lamumu Edition</title>
